@@ -47,18 +47,15 @@ pub fn main() !void {
     ibo.bufferData(&indices);
     ibo.bind();
 
-    c.glEnableVertexAttribArray(0);
-    c.glVertexAttribPointer(0, 2, c.GL_FLOAT, c.GL_FALSE, 2 * @sizeOf(f32), @ptrFromInt(0));
+    var vao = Vao.init();
+    var layout = Vao.Layout.init(std.heap.page_allocator);
+    defer layout.deinit();
 
-    // var vao = Vao.init();
-    // var layout = Vao.Layout.init(std.heap.page_allocator);
-    // defer layout.deinit();
+    layout.push(f32, 2) catch unreachable;
+    vao.setFormatLayout(layout);
 
-    // layout.push(f32, 2) catch unreachable;
-    // vao.setFormatLayout(layout);
-
-    // vao.bindVertexBufferObject(vbo, 5 * @sizeOf(f32));
-    // vao.bindIndexBufferObject(ibo);
+    vao.bindVertexBufferObject(vbo, 2 * @sizeOf(f32));
+    vao.bindIndexBufferObject(ibo);
 
     const vertSource = @embedFile("assets/shaders/basic.vert");
     const fragSource = @embedFile("assets/shaders/basic.frag");
@@ -72,7 +69,7 @@ pub fn main() !void {
         c.glClear(c.GL_COLOR_BUFFER_BIT);
 
         raster.bind();
-        //vao.bind();
+        vao.bind();
         c.glDrawElements(c.GL_TRIANGLES, @intCast(ibo.indexCount), c.GL_UNSIGNED_INT, null);
 
         c.glfwSwapBuffers(createWindow);
