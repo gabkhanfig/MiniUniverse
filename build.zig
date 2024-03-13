@@ -1,4 +1,5 @@
 const std = @import("std");
+const LazyPath = std.Build.LazyPath;
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
@@ -10,6 +11,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    linkAndIncludeCLibs(exe);
 
     b.installArtifact(exe);
     const run_cmd = b.addRunArtifact(exe);
@@ -28,9 +30,35 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    linkAndIncludeCLibs(exe_unit_tests);
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
+}
+
+fn linkAndIncludeCLibs(artifact: *std.Build.Step.Compile) void {
+    const flags = [_][]const u8{};
+
+    artifact.linkLibC();
+    artifact.linkLibCpp();
+
+    // OpenGL
+    artifact.linkSystemLibrary("opengl32");
+    artifact.addCSourceFile(.{ .file = LazyPath.relative("dependencies/opengl/glad.c"), .flags = &flags });
+    artifact.addIncludePath(LazyPath.relative("dependencies/opengl"));
+
+    artifact.linkSystemLibrary("gdi32");
+    artifact.linkSystemLibrary("user32");
+    artifact.linkSystemLibrary("shell32");
+
+    // GLFW
+    artifact.addLibraryPath(LazyPath.relative("dependencies/glfw-zig/zig-out/lib"));
+    artifact.addIncludePath(LazyPath.relative("dependencies/glfw-zig/zig-out/include"));
+    artifact.addObjectFile(LazyPath.relative("dependencies/glfw-zig/zig-out/lib/glfw.lib"));
+
+    // stb_image
+    artifact.addIncludePath(LazyPath.relative("dependencies/stb"));
+    artifact.addCSourceFile(.{ .file = LazyPath.relative("dependencies/stb/stb_image.c"), .flags = &flags });
 }
