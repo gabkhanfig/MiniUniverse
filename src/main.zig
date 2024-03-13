@@ -35,20 +35,20 @@ pub fn main() !void {
         0.5,  -0.5,
     };
 
-    // const indices: [3]u32 = .{
-    //     0, 1, 2,
-    // };
+    const indices: [3]u32 = .{
+        0, 1, 2,
+    };
 
     var vbo = Vbo.init();
     vbo.bufferData(f32, &vertices);
     vbo.bind();
 
+    var ibo = Ibo.init();
+    ibo.bufferData(&indices);
+    ibo.bind();
+
     c.glEnableVertexAttribArray(0);
     c.glVertexAttribPointer(0, 2, c.GL_FLOAT, c.GL_FALSE, 2 * @sizeOf(f32), @ptrFromInt(0));
-
-    // var ibo = Ibo.init();
-    // ibo.bufferData(&indices);
-    // ibo.bind();
 
     // var vao = Vao.init();
     // var layout = Vao.Layout.init(std.heap.page_allocator);
@@ -73,8 +73,7 @@ pub fn main() !void {
 
         raster.bind();
         //vao.bind();
-        //c.glDrawElements(c.GL_TRIANGLES, @intCast(ibo.indexCount), c.GL_UNSIGNED_INT, null);
-        c.glDrawArrays(c.GL_TRIANGLES, 0, 6);
+        c.glDrawElements(c.GL_TRIANGLES, @intCast(ibo.indexCount), c.GL_UNSIGNED_INT, null);
 
         c.glfwSwapBuffers(createWindow);
     }
