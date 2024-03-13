@@ -44,6 +44,8 @@ fn linkAndIncludeCLibs(artifact: *std.Build.Step.Compile) void {
     artifact.linkLibC();
     artifact.linkLibCpp();
 
+    artifact.addIncludePath(LazyPath.relative("src"));
+
     // OpenGL
     artifact.linkSystemLibrary("opengl32");
     artifact.addCSourceFile(.{ .file = LazyPath.relative("dependencies/opengl/glad.c"), .flags = &flags });
