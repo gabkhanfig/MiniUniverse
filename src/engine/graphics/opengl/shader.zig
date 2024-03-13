@@ -1,6 +1,6 @@
 const std = @import("std");
 const c = @import("../../clibs.zig");
-//const Engine = @import("../../Engine.zig");
+const isCurrentOnRenderThread = @import("../../Engine.zig").isCurrentOnRenderThread;
 const assert = std.debug.assert;
 const StringHashMap = std.StringHashMap;
 const math_vector = @import("../../math/vector.zig");
@@ -19,6 +19,8 @@ pub const RasterShader = struct {
     uniforms: StringHashMap(u32),
 
     pub fn init(vertexSource: []const u8, fragmentSource: []const u8) CompileError!Self {
+        assert(isCurrentOnRenderThread());
+
         const program = c.glCreateProgram();
 
         const vs = compileShader(vertexSource, c.GL_VERTEX_SHADER) catch |err| {
@@ -46,20 +48,24 @@ pub const RasterShader = struct {
     }
 
     pub fn deinit(self: *Self) void {
+        assert(isCurrentOnRenderThread());
+
         c.glDeleteProgram(self.id);
         self.uniforms.deinit();
     }
 
     pub fn bind(self: Self) void {
-        //assert(Engine.isCurrentOnRenderThread());
+        assert(isCurrentOnRenderThread());
         bindShader(self.id);
     }
 
     pub fn unbind() void {
+        assert(isCurrentOnRenderThread());
         unbindShader();
     }
 
     pub fn setUniform(self: *Self, uniformName: [:0]const u8, comptime T: type, value: T) void {
+        assert(isCurrentOnRenderThread());
         setShaderUniform(self.id, T, uniformName, &self.uniforms, value);
     }
 };
@@ -72,6 +78,8 @@ pub const ComputeShader = struct {
     uniforms: StringHashMap(u32),
 
     pub fn init(computeSource: []const u8) CompileError!Self {
+        assert(isCurrentOnRenderThread());
+
         const program = c.glCreateProgram();
 
         const cs = compileShader(computeSource, c.GL_COMPUTE_SHADER) catch |err| {
@@ -92,31 +100,37 @@ pub const ComputeShader = struct {
     }
 
     pub fn deinit(self: *Self) void {
+        assert(isCurrentOnRenderThread());
+
         c.glDeleteProgram(self.id);
         self.uniforms.deinit();
     }
 
     pub fn bind(self: Self) void {
-        //assert(Engine.isCurrentOnRenderThread());
+        assert(isCurrentOnRenderThread());
         bindShader(self.id);
     }
 
     pub fn unbind() void {
+        assert(isCurrentOnRenderThread());
         unbindShader();
     }
 
     pub fn setUniform(self: *Self, uniformName: [:0]const u8, comptime T: type, value: T) void {
+        assert(isCurrentOnRenderThread());
         setShaderUniform(self.id, T, uniformName, &self.uniforms, value);
     }
 
     /// Binds and dispatch's compute, with a memory barrier.
     pub fn dispatch(self: Self, numGroupsX: u32, numGroupsY: u32, numGroupsZ: u32) void {
+        assert(isCurrentOnRenderThread());
         self.bind();
         c.glDispatchCompute(numGroupsX, numGroupsY, numGroupsZ);
         c.glMemoryBarrier(c.GL_ALL_BARRIER_BITS);
     }
 
     pub fn maxWorkGroupsPerComputeShader() Vector3(i32) {
+        assert(isCurrentOnRenderThread());
         var workGroupCount: [3]i32 = undefined;
         c.glGetIntegeri_v(c.GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &workGroupCount[0]);
         c.glGetIntegeri_v(c.GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &workGroupCount[1]);
@@ -125,6 +139,7 @@ pub const ComputeShader = struct {
     }
 
     pub fn maxWorkGroupSizes() Vector3(i32) {
+        assert(isCurrentOnRenderThread());
         var workGroupSizes: [3]i32 = undefined;
         c.glGetIntegeri_v(c.GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &workGroupSizes[0]);
         c.glGetIntegeri_v(c.GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &workGroupSizes[1]);
@@ -133,6 +148,7 @@ pub const ComputeShader = struct {
     }
 
     pub fn maxInvocationsPerWorkGroup() i32 {
+        assert(isCurrentOnRenderThread());
         var invocations: i32 = undefined;
         c.glGetIntegerv(c.GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &invocations);
         return invocations;

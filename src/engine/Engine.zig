@@ -93,9 +93,18 @@ pub fn get() *Self {
 /// Checks if the calling thread is the same thread as the OpenGL render thread.
 /// This is useful because nearly all OpenGL functions require being executed on the same thread
 /// that the OpenGL context was created on, which must be the render thread.
+///
+/// For development use, if the engine instance is null, simply returns true. This allows
+/// experimenting with singlethreaded stuff.
 pub fn isCurrentOnRenderThread() bool {
     const engine: ?*Self = engineInstance.load(std.builtin.AtomicOrder.Acquire);
-    assert(engine != null);
+    if (std.debug.runtime_safety) {
+        if (engine == null) {
+            return true;
+        }
+    } else {
+        assert(engine != null);
+    }
     return std.Thread.getCurrentId() == engine.?.renderThread.threadId;
 }
 

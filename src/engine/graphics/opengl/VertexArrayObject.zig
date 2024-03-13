@@ -1,6 +1,6 @@
 const std = @import("std");
 const c = @import("../../clibs.zig");
-//const Engine = @import("../../Engine.zig");
+const isCurrentOnRenderThread = @import("../../Engine.zig").isCurrentOnRenderThread;
 const assert = std.debug.assert;
 const Allocator = std.mem.Allocator;
 const VertexBufferObject = @import("VertexBufferObject.zig");
@@ -14,12 +14,14 @@ const Self = @This();
 id: u32,
 
 pub fn init() Self {
+    assert(isCurrentOnRenderThread());
     var id: u32 = undefined;
     c.glCreateVertexArrays(1, &id);
     return Self{ .id = id };
 }
 
 pub fn deinit(self: Self) void {
+    assert(isCurrentOnRenderThread());
     if (self.isBound()) {
         currentBoundVAO = 0;
     }
@@ -27,6 +29,7 @@ pub fn deinit(self: Self) void {
 }
 
 pub fn setFormatLayout(self: *Self, layout: Layout) void {
+    assert(isCurrentOnRenderThread());
     var i: u32 = 0;
     var offset: u32 = 0;
     for (layout._elements.items) |element| {
@@ -49,14 +52,17 @@ pub fn setFormatLayout(self: *Self, layout: Layout) void {
 }
 
 pub fn bindVertexBufferObject(self: Self, vbo: VertexBufferObject, bytesPerElements: u32) void {
+    assert(isCurrentOnRenderThread());
     c.glVertexArrayVertexBuffer(self.id, 0, vbo.id, 0, @intCast(bytesPerElements));
 }
 
 pub fn bindIndexBufferObject(self: Self, ibo: IndexBufferObject) void {
+    assert(isCurrentOnRenderThread());
     c.glVertexArrayElementBuffer(self.id, ibo.id);
 }
 
 pub fn bind(self: Self) void {
+    assert(isCurrentOnRenderThread());
     if (self.isBound()) {
         return;
     }
@@ -65,6 +71,7 @@ pub fn bind(self: Self) void {
 }
 
 pub fn unbind() void {
+    assert(isCurrentOnRenderThread());
     c.glBindVertexArray(0);
     currentBoundVAO = 0;
 }
