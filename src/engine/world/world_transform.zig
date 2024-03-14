@@ -1,3 +1,7 @@
+const std = @import("std");
+const assert = std.debug.assert;
+const expect = std.testing.expect;
+
 const CHUNK_LENGTH = 256;
 const CHUNK_SIZE: comptime_int = CHUNK_LENGTH * CHUNK_LENGTH;
 
@@ -51,3 +55,56 @@ pub const ChunkPosition = struct {
         return h;
     }
 };
+
+// Tests
+
+test "BlockIndex to index" {
+    {
+        const b = BlockIndex{ .x = 0, .y = 0 };
+        try expect(b.index() == 0);
+    }
+    {
+        const b = BlockIndex{ .x = 1, .y = 0 };
+        try expect(b.index() == 1);
+    }
+    {
+        const b = BlockIndex{ .x = 2, .y = 0 };
+        try expect(b.index() == 2);
+    }
+    {
+        const b = BlockIndex{ .x = 0, .y = 1 };
+        try expect(b.index() == 256);
+    }
+    {
+        const b = BlockIndex{ .x = CHUNK_LENGTH - 1, .y = CHUNK_LENGTH - 1 };
+        try expect(b.index() == (CHUNK_SIZE - 1));
+    }
+}
+
+test "BlockIndex from index" {
+    {
+        const b = BlockIndex.fromIndex(0);
+        try expect(b.x == 0);
+        try expect(b.y == 0);
+    }
+    {
+        const b = BlockIndex.fromIndex(1);
+        try expect(b.x == 1);
+        try expect(b.y == 0);
+    }
+    {
+        const b = BlockIndex.fromIndex(2);
+        try expect(b.x == 2);
+        try expect(b.y == 0);
+    }
+    {
+        const b = BlockIndex.fromIndex(256);
+        try expect(b.x == 0);
+        try expect(b.y == 1);
+    }
+    {
+        const b = BlockIndex.fromIndex(CHUNK_SIZE - 1);
+        try expect(b.x == (CHUNK_LENGTH - 1));
+        try expect(b.y == (CHUNK_LENGTH - 1));
+    }
+}
