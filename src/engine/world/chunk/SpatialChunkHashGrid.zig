@@ -1,3 +1,6 @@
+//! Spatial hashing for all of the chunks loaded in the world.
+//! Uses 256 bit SIMD instructions (AVX2 x86).
+
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 const assert = std.debug.assert;
@@ -16,6 +19,7 @@ pub fn init() Self {
     return Self{ .groups = slice };
 }
 
+/// Does not call deinit on the chunks themselves.
 pub fn deinit(self: Self, allocator: Allocator) void {
     if (self.chunkCount == 0) {
         return;
@@ -44,6 +48,9 @@ pub fn find(self: Self, key: ChunkPosition) ?Chunk {
     return self.groups[groupIndex].pairs[found.?].value;
 }
 
+/// # Asserts
+///
+/// Asserts the entry doesn't already exist.
 pub fn insert(self: *Self, key: ChunkPosition, value: Chunk, allocator: Allocator) Allocator.Error!void {
     try self.ensureTotalCapacity(self.chunkCount + 1, allocator);
 
@@ -55,6 +62,11 @@ pub fn insert(self: *Self, key: ChunkPosition, value: Chunk, allocator: Allocato
     self.chunkCount += 1;
 }
 
+/// Erase a chunk entry.
+///
+/// # Asserts
+///
+/// Asserts that the entry exists.
 pub fn erase(self: *Self, key: ChunkPosition, allocator: Allocator) void {
     if (self.chunkCount == 0) return;
 
