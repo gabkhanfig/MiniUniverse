@@ -15,6 +15,16 @@ pub const BlockIndex = extern struct {
         const y: u16 = @intCast(self.y);
         return x | @shlExact(y, 8);
     }
+
+    pub fn fromIndex(inIndex: u16) Self {
+        const xMask = inIndex & 0x00FF;
+        const yMask = inIndex & 0xFF00;
+
+        return Self{
+            .x = @intCast(xMask),
+            .y = @intCast(@shrExact(yMask, 8)),
+        };
+    }
 };
 
 /// Position of a chunk in the world.
