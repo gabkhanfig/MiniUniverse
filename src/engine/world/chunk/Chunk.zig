@@ -18,8 +18,6 @@ inner: *anyopaque,
 pub const Inner = struct {
     const DEFAULT_BLOCK_STATE_CAPACITY = 4;
 
-    const Self = @This();
-
     _lock: RwLock = .{},
     allocator: Allocator,
     pos: ChunkPosition,
@@ -27,15 +25,21 @@ pub const Inner = struct {
     blockStateIndices: BlockStateIndices,
     breakingProgress: ?*std.ArrayListUnmanaged(BlockBreakingProgress) = null,
 
-    fn init(pos: ChunkPosition, allocator: Allocator) Allocator.Error!*Self {
-        const self = try allocator.create(Self);
-        self.* = Self{
+    fn init(pos: ChunkPosition, allocator: Allocator) Allocator.Error!*Inner {
+        const self = try allocator.create(Inner);
+        self.* = Inner{
             .allocator = allocator,
             .pos = pos,
             .blockStates = try std.ArrayListUnmanaged(BlockState).initCapacity(allocator, DEFAULT_BLOCK_STATE_CAPACITY),
             .blockStateIndices = try BlockStateIndices.init(allocator),
         };
         return self;
+    }
+
+    pub fn deinit(self: *Inner) void {
+        self.blockStateIndices.deinit(self.allocator);
+        self.blockStates.deinit(self.allocator);
+        self.allocator.destroy(self);
     }
 };
 
