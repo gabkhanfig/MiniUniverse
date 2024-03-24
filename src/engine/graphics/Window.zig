@@ -33,7 +33,7 @@ pub fn init(renderThread: ?*JobThread, dimensions: Vec2i) Self {
     if (renderThread == null) {
         c.glfwMakeContextCurrent(window);
     } else {
-        const future = renderThread.runJob(c.glfwMakeContextCurrent, .{window}) catch unreachable;
+        const future = renderThread.?.runJob(c.glfwMakeContextCurrent, .{window}) catch unreachable;
         future.wait();
     }
 

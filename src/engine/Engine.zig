@@ -34,7 +34,7 @@ _openglInstance: OpenGLInstance,
 /// This behaviour is used to make it straightforward to try different engine configurations concurrently.
 pub fn init(allocator: Allocator, params: EngineInitializationParams, timeoutInMillis: ?u64) EngineInitError!void {
     const start = std.time.Instant.now() catch unreachable;
-    var timeoutAsNanos = undefined;
+    var timeoutAsNanos: u64 = undefined;
     if (timeoutInMillis) |t| {
         timeoutAsNanos = t * std.time.ns_per_ms;
     } else {
@@ -57,7 +57,8 @@ pub fn init(allocator: Allocator, params: EngineInitializationParams, timeoutInM
 
         const newEngine = try Self.create(allocator, params);
 
-        while (engineInstance.cmpxchgWeak(null, newEngine, AtomicOrder.Release, AtomicOrder.SeqCst) == null) {
+        // Are these the right atomic orders?
+        while (engineInstance.cmpxchgWeak(null, newEngine, AtomicOrder.SeqCst, AtomicOrder.SeqCst) == null) {
             if (std.Thread.yield()) {
                 continue;
             } else |_| {
@@ -113,7 +114,7 @@ fn create(allocator: Allocator, params: EngineInitializationParams) EngineInitEr
     newEngine.allocator = allocator;
     newEngine.renderThread = try JobThread.init(&newEngine.allocator);
     newEngine.jobSystem = try JobSystem.init(newEngine.allocator, params.jobThreadCount);
-    newEngine._window = Window.init(newEngine.renderThread, 640, 480);
+    newEngine._window = Window.init(newEngine.renderThread, .{ .x = 640, .y = 480 });
     newEngine._openglInstance = OpenGLInstance.init(newEngine.renderThread);
     return newEngine;
 }

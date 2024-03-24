@@ -12,6 +12,7 @@ pub fn init(renderThread: ?*JobThread) Self {
         if (result == c.GL_FALSE) {
             @panic("Failed to load OpenGL");
         }
+        return Self{};
     } else {
         const future = renderThread.?.runJob(c.gladLoadGL, .{}) catch unreachable;
         const result: c_int = future.wait();
