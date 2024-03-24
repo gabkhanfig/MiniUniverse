@@ -159,3 +159,8 @@ pub const EngineInitializationParams = struct {
 
 // https://ziglang.org/documentation/master/#Merging-Error-Sets
 pub const EngineInitError = Allocator.Error || std.Thread.SpawnError || std.Thread.YieldError || error{EngineTimeout};
+
+test "Engine init deinit" {
+    try Self.init(std.testing.allocator, .{ .jobThreadCount = 2 }, 1);
+    Self.deinit();
+}
