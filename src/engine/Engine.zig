@@ -176,6 +176,7 @@ test "Engine init deinit" {
 
 test "Engine double init times out" {
     try Self.init(std.testing.allocator, .{ .jobThreadCount = 2 }, 1);
+    defer Self.deinit();
 
     {
         const result = Self.init(std.testing.allocator, .{ .jobThreadCount = 2 }, 1);
@@ -185,5 +186,4 @@ test "Engine double init times out" {
             try expect(err == EngineInitError.EngineTimeout);
         }
     }
-    Self.deinit();
 }
