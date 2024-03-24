@@ -1,5 +1,6 @@
 const std = @import("std");
 const assert = std.debug.assert;
+const expect = std.testing.expect;
 const c = @import("clibs.zig");
 const Mutex = std.Thread.Mutex;
 const Allocator = std.mem.Allocator;
@@ -18,6 +19,7 @@ var engineInstance: AtomicValue(?*Self) = AtomicValue(?*Self).init(null);
 allocator: Allocator,
 renderThread: *JobThread,
 jobSystem: JobSystem,
+// TODO allow no graphics engine creation.
 _window: Window,
 _openglInstance: OpenGLInstance,
 
@@ -44,7 +46,7 @@ pub fn init(allocator: Allocator, params: EngineInitializationParams, timeoutInM
     while (true) {
         if (engineInstance.load(AtomicOrder.Acquire) != null) {
             const now = std.time.Instant.now() catch unreachable;
-            if (start.since(now) > timeoutAsNanos) {
+            if (now.since(start) > timeoutAsNanos) {
                 return EngineInitError.EngineTimeout;
             }
 
@@ -162,5 +164,26 @@ pub const EngineInitError = Allocator.Error || std.Thread.SpawnError || std.Thre
 
 test "Engine init deinit" {
     try Self.init(std.testing.allocator, .{ .jobThreadCount = 2 }, 1);
+    Self.deinit();
+}
+
+// NOTE This doesn't need to always run, but can be useful to validate that a window gets created
+// test "Engine does window get created?" {
+//     try Self.init(std.testing.allocator, .{ .jobThreadCount = 2 }, 1);
+//     std.time.sleep(std.time.ns_per_s * 2);
+//     Self.deinit();
+// }
+
+test "Engine double init times out" {
+    try Self.init(std.testing.allocator, .{ .jobThreadCount = 2 }, 1);
+
+    {
+        const result = Self.init(std.testing.allocator, .{ .jobThreadCount = 2 }, 1);
+        if (result) |_| {
+            try expect(false);
+        } else |err| {
+            try expect(err == EngineInitError.EngineTimeout);
+        }
+    }
     Self.deinit();
 }
