@@ -2,8 +2,8 @@ const std = @import("std");
 const assert = std.debug.assert;
 const expect = std.testing.expect;
 
-const CHUNK_LENGTH = 256;
-const CHUNK_SIZE: comptime_int = CHUNK_LENGTH * CHUNK_LENGTH;
+pub const CHUNK_LENGTH = 256;
+pub const CHUNK_SIZE: comptime_int = CHUNK_LENGTH * CHUNK_LENGTH;
 
 /// Position of a block within a chunk.
 /// x has a factor of 1.
